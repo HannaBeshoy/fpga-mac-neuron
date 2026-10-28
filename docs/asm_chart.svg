@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 800" width="760" height="800" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>ASM chart of the neuron controller</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#344052"/>
+    </marker>
+    <style>
+      .st  { fill: #e2ebf6; stroke: #1f4f8a; stroke-width: 2; }
+      .dec { fill: #ffffff; stroke: #344052; stroke-width: 1.6; }
+      .co  { fill: #fbf0d9; stroke: #8a5300; stroke-width: 1.6; }
+      .nm  { font-size: 15px; font-weight: 700; fill: #131a24; }
+      .out { font-size: 13px; fill: #1f4f8a; font-weight: 600; }
+      .cd  { font-size: 12px; fill: #617084; font-family: 'DejaVu Sans Mono', Consolas, monospace; }
+      .t   { font-size: 13.5px; fill: #131a24; }
+      .lb  { font-size: 12.5px; fill: #344052; font-weight: 600; }
+      .e   { stroke: #344052; stroke-width: 1.5; fill: none; }
+      .note{ font-size: 12.5px; fill: #344052; }
+      .h   { font-size: 13px; font-weight: 700; fill: #131a24; }
+    </style>
+  </defs>
+  <rect width="760" height="800" fill="#ffffff"/>
+
+  <!-- reset and the return from DONE enter IDLE from the top -->
+  <text class="lb" x="330" y="16">reset</text>
+  <path class="e" d="M320,8 V38" marker-end="url(#a)"/>
+  <path class="e" d="M320,742 V770 H60 V22 H320"/>
+
+  <!-- IDLE -->
+  <rect class="st" x="220" y="40" width="200" height="50"/>
+  <text class="nm" x="236" y="70">IDLE</text><text class="out" x="290" y="70">/ idle</text>
+  <text class="cd" x="426" y="52">00</text>
+  <path class="e" d="M320,90 V108" marker-end="url(#a)"/>
+
+  <!-- start? -->
+  <polygon class="dec" points="320,110 390,140 320,170 250,140"/>
+  <text class="t" x="320" y="145" text-anchor="middle">start</text>
+  <path class="e" d="M250,140 H170 V65 H218" marker-end="url(#a)"/>
+  <text class="lb" x="222" y="132">0</text>
+  <path class="e" d="M320,170 V196" marker-end="url(#a)"/>
+  <text class="lb" x="328" y="188">1</text>
+
+  <!-- conditional output: snap, clr -->
+  <rect class="co" x="245" y="198" width="150" height="36" rx="18"/>
+  <text class="out" x="320" y="221" text-anchor="middle" style="fill:#8a5300">snap, clr</text>
+  <path class="e" d="M320,234 V268" marker-end="url(#a)"/>
+
+  <!-- MSTART -->
+  <rect class="st" x="220" y="270" width="200" height="50"/>
+  <text class="nm" x="236" y="300">MSTART</text><text class="out" x="320" y="300">/ mst</text>
+  <text class="cd" x="426" y="282">01</text>
+  <path class="e" d="M320,320 V358" marker-end="url(#a)"/>
+
+  <!-- MWAIT -->
+  <rect class="st" x="220" y="360" width="200" height="50"/>
+  <text class="nm" x="236" y="390">MWAIT</text>
+  <text class="cd" x="426" y="372">10</text>
+  <path class="e" d="M320,410 V433" marker-end="url(#a)"/>
+
+  <!-- mdone? -->
+  <polygon class="dec" points="320,435 390,465 320,495 250,465"/>
+  <text class="t" x="320" y="470" text-anchor="middle">mdone</text>
+  <path class="e" d="M250,465 H170 V385 H218" marker-end="url(#a)"/>
+  <text class="lb" x="222" y="457">0</text>
+  <path class="e" d="M320,495 V521" marker-end="url(#a)"/>
+  <text class="lb" x="328" y="513">1</text>
+
+  <!-- conditional output: add -->
+  <rect class="co" x="260" y="523" width="120" height="36" rx="18"/>
+  <text class="out" x="320" y="546" text-anchor="middle" style="fill:#8a5300">add</text>
+  <path class="e" d="M320,559 V583" marker-end="url(#a)"/>
+
+  <!-- i = 3 ? -->
+  <polygon class="dec" points="320,585 390,615 320,645 250,615"/>
+  <text class="t" x="320" y="620" text-anchor="middle">i = 3</text>
+  <path class="e" d="M390,615 H458" marker-end="url(#a)"/>
+  <text class="lb" x="398" y="607">0</text>
+  <rect class="co" x="460" y="597" width="110" height="36" rx="18"/>
+  <text class="out" x="515" y="620" text-anchor="middle" style="fill:#8a5300">inc</text>
+  <path class="e" d="M570,615 H610 V295 H422" marker-end="url(#a)"/>
+  <path class="e" d="M320,645 V690" marker-end="url(#a)"/>
+  <text class="lb" x="328" y="672">1</text>
+
+  <!-- DONE -->
+  <rect class="st" x="220" y="692" width="200" height="50"/>
+  <text class="nm" x="236" y="722">DONE</text><text class="out" x="296" y="722">/ ld_y</text>
+  <text class="cd" x="426" y="704">11</text>
+
+  <!-- legend -->
+  <text class="h" x="458" y="70">Moore outputs (state boxes)</text>
+  <text class="note" x="458" y="90">idle: not busy</text>
+  <text class="note" x="458" y="108">mst: start the multiplier</text>
+  <text class="note" x="458" y="126">ld_y: y = acc, fire = (acc ≥ T)</text>
+  <text class="h" x="458" y="168">Mealy outputs (conditional boxes)</text>
+  <text class="note" x="458" y="188">snap: store x, w and T in registers</text>
+  <text class="note" x="458" y="206">clr: acc = 0, i = 0</text>
+  <text class="note" x="458" y="224">add: acc = acc + w[i]·x[i]</text>
+  <text class="note" x="458" y="242">inc: i = i + 1</text>
+  <text class="note" x="680" y="460" text-anchor="middle">4 products,</text>
+  <text class="note" x="680" y="478" text-anchor="middle">one per loop</text>
+  <text class="note" x="20" y="792">25 clocks from start to DONE for any inputs and weights. Outputs not shown on a path are 0.</text>
+</svg>

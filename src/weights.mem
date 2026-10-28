@@ -1,0 +1,17 @@
+// weight sets for the neuron: threshold (10 bits) _ w3 _ w2 _ w1 _ w0 (4 bits each)
+// set 0: all weights 1        -> fires when x0+x1+x2+x3 >= 30
+0000011110_0001_0001_0001_0001
+// set 1: binary weights 8,4,2,1 (x3 matters most) -> fires when y >= 100
+0001100100_1000_0100_0010_0001
+// set 2: binary weights 1,2,4,8 (x0 matters most) -> fires when y >= 100
+0001100100_0001_0010_0100_1000
+// set 3: all weights 15 (largest y = 900)          -> fires when y >= 450
+0111000010_1111_1111_1111_1111
+// set 4: only x0 counts                             -> fires when x0 >= 8
+0000001000_0000_0000_0000_0001
+// set 5: the two outer inputs, weight 3              -> fires when y >= 45
+0000101101_0011_0000_0000_0011
+// set 6: the two upper inputs, weight 5              -> fires when y >= 50
+0000110010_0101_0101_0000_0000
+// set 7: all weights 0 and threshold 1: never fires (a "dead" neuron)
+0000000001_0000_0000_0000_0000
