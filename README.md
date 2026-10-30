@@ -15,7 +15,7 @@ y = w0·x0 + w1·x1 + w2·x2 + w3·x3        fire = (y ≥ T)
 The design also shows a **timing side channel**. The course's multiplier takes longer when the multiplier has more 1 bits, so its run time leaks information about the data. This design uses a constant-time version, and the testbench proves the difference.
 
 - [x] Verified in simulation: 3 self-checking testbenches, all pass
-- [x] Tested on the Nexys 4 DDR board (October 2026): all 8 weight sets, every switch group, set 3 at its maximum of 900, and the weight-set wrap-around
+- [x] Tested on the Nexys 4 DDR board (October 2026): every switch group, weight sets 0, 1 and 3 (including the maximum, y = 900), and stepping through all 8 sets with wrap-around
 
 ![Block diagram](docs/block_diagram.svg)
 
