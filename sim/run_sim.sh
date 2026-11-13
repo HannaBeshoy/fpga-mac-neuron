@@ -20,3 +20,9 @@ vvp -n tb_neuron
 echo "== whole board design"
 iverilog -g2005 -Wall -DSIMULATION -s tb_top -o tb_top ../tb_top.v $SRC/*.v
 vvp -n tb_top
+
+echo "== test-vector files: board neuron, signed neuron, parallel neuron"
+cp ../vectors_unsigned.tv ../vectors_signed.tv .
+iverilog -g2005 -Wall -s tb_vectors -o tb_vectors ../tb_vectors.v $SRC/neuron.v $SRC/seq_mult.v \
+    $SRC/variants/neuron_signed.v $SRC/variants/seq_mult_signed.v $SRC/variants/neuron_parallel.v
+vvp -n tb_vectors

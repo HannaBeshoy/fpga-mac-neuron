@@ -14,7 +14,8 @@ y = w0·x0 + w1·x1 + w2·x2 + w3·x3        fire = (y ≥ T)
 
 The design also shows a **timing side channel**. The course's multiplier takes longer when the multiplier has more 1 bits, so its run time leaks information about the data. This design uses a constant-time version, and the testbench proves the difference.
 
-- [x] Verified in simulation: 3 self-checking testbenches, all pass
+- [x] Verified in simulation: 4 self-checking testbenches, all pass, one of them driven by test-vector files
+- [x] Variants compared after synthesis: signed weights, hardware multipliers (DSP48E1), block RAM ([resource table](#variants-and-what-they-cost))
 - [x] Tested on the Nexys 4 DDR board (October 2026): every switch group, weight sets 0, 1 and 3 (including the maximum, y = 900), and stepping through all 8 sets with wrap-around
 
 ![Block diagram](docs/block_diagram.svg)
@@ -112,12 +113,43 @@ The Clocking Wizard turns the 100 MHz oscillator into a 50 MHz system clock. Eve
 | `tb_mult.v` | Course multiplier, N = 3: all 64 pairs, including the Lab 10 sample waveform. Both multipliers, N = 4: all 256 pairs each against `*`, and the clocks each one takes | 579 checks, 0 errors; constant-time version 5 clocks for every pair |
 | `tb_neuron.v` | All 8 weight sets × (4 corner cases + 500 random inputs) against a reference model that reads `weights.mem` itself and uses `*`. The switches change in the middle of every run, which must not matter | 4,032 runs, 0 errors, 25 clocks for every run |
 | `tb_top.v` | The whole board design used like a person would: switches, bouncing buttons, weight sets wrapping 7 ↔ 0, results read from the LEDs and by decoding the scanning 7-segment display | 13 checks, 0 errors |
+| `tb_vectors.v` | 2,000 test vectors read from files (`tools/gen_vectors.py` computes the expected results on its own): the board neuron, the signed neuron and the parallel neuron; every sequential run must take 25 clocks | 3,000 checks, 0 errors |
 
 The testbenches use tasks for repeated stimulus (Lab 6). Expected values are computed with ordinary arithmetic, never with the design's own shift-and-add method, so a mistake cannot hide in its own test. Open-source synthesis (Yosys) finds no latches and 150 flip-flops.
 
 ![One neuron run](docs/waveform_one_run.png)
 
 *One run with weight set 1 and x3 = x0 = 15, from the system simulation. Each loop starts the multiplier (MSTART), waits for it (MWAIT), and adds the product. The multiplier row shows its accumulator shifting during each multiplication: 15, 71, 99, 113 and finally 120 = 8 × 15.*
+
+## Variants and what they cost
+
+The board runs the sequential, unsigned neuron. `src/variants/` holds three variants that are simulated and synthesised but not on the board:
+
+- **Signed weights** (`neuron_signed.v`): two's-complement weights from -8 to 7, so an input can also inhibit the neuron. The multiplier works on the weight's magnitude and restores the sign at the end; the negation is always computed and a multiplexer picks the result, so the run still takes 25 clocks whatever the data.
+- **Hardware multipliers** (`neuron_parallel.v`): four `*` operators and an adder tree, one clock per neuron instead of 25.
+- **Synchronous ROM** (`weight_rom_sync.v`): a registered read, which is what a block RAM needs.
+
+Resources after synthesis for the Artix-7 (Yosys `synth_xilinx`, written by `tools/resources.py` to [results/resources.md](results/resources.md)):
+
+| Design | LUTs | Flip-flops | CARRY4 | DSP48E1 | Block RAM |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Course multiplier (data-dependent time) | 23 | 15 | 2 | 0 | 0 |
+| Constant-time multiplier | 21 | 13 | 2 | 0 | 0 |
+| Neuron, unsigned, sequential (on the board) | 82 | 80 | 6 | 0 | 0 |
+| Neuron, signed weights, sequential | 64 | 81 | 10 | 0 | 0 |
+| Neuron, signed, 4 parallel multipliers, 4-bit | 18 | 13 | 4 | 4 | 0 |
+| Neuron, signed, 4 parallel multipliers, 16-bit | 58 | 37 | 12 | 4 | 0 |
+| Weight ROM, 8 words, asynchronous read | 16 | 0 | 0 | 0 | 0 |
+| Weight ROM, 8 words, synchronous read | 13 | 16 | 0 | 0 | 0 |
+| Weight ROM, 1024 words, synchronous read | 0 | 0 | 0 | 0 | 1 |
+
+What the table shows:
+
+- The constant-time multiplier is not more expensive than the course version: closing the side channel is free here.
+- The parallel neuron is 25 times faster in clocks and uses fewer LUTs, but it spends 4 of the device's 240 DSP blocks. The sequential neuron needs none.
+- A small ROM stays in LUTs; at 1024 words the synchronous version moves into one block RAM and uses no LUTs at all. The asynchronous version could never do that.
+
+These are resource counts only. The maximum clock frequency and a timing simulation after place and route need Vivado; they are not measured yet.
 
 ## Build and run
 
@@ -143,16 +175,19 @@ To simulate in XSim:
 
 ```
 src/           Verilog design, 11 modules, and weights.mem
-sim/           testbenches and run_sim.sh
+src/variants/  signed neuron, parallel neuron, synchronous ROM (not on the board)
+sim/           testbenches, test-vector files and run_sim.sh
+tools/         gen_vectors.py (test vectors), resources.py (synthesis table)
+results/       resources.md
 constraints/   nexys4ddr.xdc (Vivado)
 docs/          project guide, block diagram, ASM chart, waveform
 ```
 
 ## Ideas to extend it
 
-- Signed weights (two's complement), so a neuron can also be inhibited by an input.
+- Put the signed neuron on the board (negative results on the display).
 - A second neuron layer: two hidden neurons feeding one output neuron.
-- Compare with the Artix-7's DSP48 hardware multiplier: speed and resources.
+- Measure the maximum clock frequency of each variant in Vivado and run a post-implementation timing simulation.
 - Load the weights over UART from a PC instead of rebuilding.
 
 ---
