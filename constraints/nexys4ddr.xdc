@@ -6,7 +6,9 @@
 
 ## 100 MHz oscillator (the Clocking Wizard makes the 50 MHz system clock)
 set_property -dict { PACKAGE_PIN E3  IOSTANDARD LVCMOS33 } [get_ports { clk }];
-create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { clk }];
+## The Clocking Wizard (clk_wiz_0) already constrains its input clock, so a second
+## create_clock here would make Vivado time every path twice.
+#create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { clk }];
 
 ## CPU RESET (active low), BTNU next weight set, BTND previous weight set
 set_property -dict { PACKAGE_PIN C12 IOSTANDARD LVCMOS33 } [get_ports { cpu_resetn }];
