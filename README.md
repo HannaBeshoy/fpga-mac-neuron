@@ -17,7 +17,7 @@ The design also shows a **timing side channel**. The course's multiplier takes l
 - [x] Verified in simulation: 4 self-checking testbenches, all pass, one of them driven by test-vector files
 - [x] Variants compared after synthesis: signed weights, hardware multipliers (DSP48E1), block RAM ([resource table](#variants-and-what-they-cost))
 - [x] Tested on the Nexys 4 DDR board (October 2026): every switch group, weight sets 0, 1 and 3 (including the maximum, y = 900), and stepping through all 8 sets with wrap-around
-- [x] Implemented in Vivado 2022.2 (November 2026): timing met at 50 MHz with 14.1 ns of slack (the slowest path takes 5.9 ns, about 169 MHz); 100 LUTs, 153 flip-flops, no DSP blocks or block RAM ([implementation results](results/implementation.md))
+- [x] Implemented in Vivado 2022.2 (November 2026): timing met at 50 MHz with 14.3 ns of slack (the slowest path takes 5.7 ns, about 176 MHz); 100 LUTs, 153 flip-flops, no DSP blocks or block RAM ([implementation results](results/implementation.md))
 
 ![Block diagram](docs/block_diagram.svg)
 
@@ -159,10 +159,10 @@ Vivado 2022.2, xc7a100tcsg324-1, 20 November 2026 ([details and full reports](re
 | | Board design (`neuron_top`) |
 | --- | --- |
 | Clock | 50 MHz from the Clocking Wizard |
-| Worst setup slack | +14.094 ns: all timing constraints met |
+| Worst setup slack | +14.325 ns: all timing constraints met |
 | Worst hold slack | +0.048 ns |
-| Slowest path | 5.9 ns, tick counter → start of a run → clear of the accumulator, 78% routing |
-| Estimated maximum clock | about 169 MHz |
+| Slowest path | 5.7 ns, tick counter → start of a run → clear of the accumulator, 77% routing |
+| Estimated maximum clock | about 176 MHz |
 | Resources | 100 LUTs, 153 flip-flops, 12 CARRY4, 0 DSP48E1, 0 block RAM, 1 MMCM |
 
 The slowest path is not in the multiplier or the adder but in the control signal that starts each run and fans out to 36 flip-flops. Vivado's flip-flop count matches the Yosys estimate (153 against 150), and there are no latches.
