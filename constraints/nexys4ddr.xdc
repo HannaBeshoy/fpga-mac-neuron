@@ -71,3 +71,8 @@ set_property -dict { PACKAGE_PIN U13 IOSTANDARD LVCMOS33 } [get_ports { an[7] }]
 ## configuration bank voltage (removes a DRC warning)
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
+
+## Switches and buttons change at any time and pass through two-flip-flop synchronizers;
+## the LEDs and the 7-segment display are read by eye. None of them is timed against the clock.
+set_false_path -from [get_ports {sw[*] btnu btnd cpu_resetn}]
+set_false_path -to [get_ports {led[*] a_to_g[*] dp an[*]}]

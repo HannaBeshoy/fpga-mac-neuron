@@ -1,6 +1,6 @@
 # Implementation in Vivado
 
-The board design (`neuron_top`: sequential unsigned neuron, Clocking Wizard, display, buttons) was synthesised, placed and routed in **Vivado 2022.2** for the **xc7a100tcsg324-1** (Nexys 4 DDR, speed grade -1) on 20 November 2026. The full reports are in [vivado/](vivado/):
+The board design (`neuron_top`: sequential unsigned neuron, Clocking Wizard, display, buttons) was synthesised, placed and routed in **Vivado 2022.2** for the **xc7a100tcsg324-1** (Nexys 4 DDR, speed grade -1) on 20 November 2026 (latest run with the I/O false paths in `constraints/nexys4ddr.xdc`; the first run without them gave the same slack). The full reports are in [vivado/](vivado/):
 
 - `neuron_top_timing_summary_routed.rpt`: `report_timing_summary` after routing
 - `neuron_top_utilization_placed.rpt`: `report_utilization` after placement
@@ -37,8 +37,8 @@ Vivado's flip-flop count agrees with the open-source synthesis (153 against 150)
 
 ## Warnings in the report, and what they mean
 
-- **19 inputs and 31 outputs have no input or output delay.** The inputs are the switches and buttons: a person changes them at any time, so they pass through two-flip-flop synchronizers instead of being timed against the clock. The outputs drive the LEDs and the 7-segment display, which are read by eye. Neither needs an I/O delay; a `set_false_path` on these ports would state that in the constraints and remove the warning.
-- **The input clock is defined twice.** `constraints/nexys4ddr.xdc` creates `sys_clk_pin` on `clk` with `-add`, and the Clocking Wizard's own constraints create a second clock on the same pin. Vivado therefore analyses every path twice (`clk_out1_clk_wiz_0` and `clk_out1_clk_wiz_0_1`, with the same result) and also between the two copies. It does not change the result; dropping the `create_clock` line from the board XDC, which the Clocking Wizard already covers, would leave one clock.
+- **I/O ports: no input or output delay.** The switches and buttons change at any time, so they pass through two-flip-flop synchronizers instead of being timed against the clock; the LEDs and the 7-segment display are read by eye. `constraints/nexys4ddr.xdc` declares this with two `set_false_path` lines, so Vivado no longer reports the 19 inputs and 31 outputs as unconstrained (the first run, without them, listed both as HIGH warnings).
+- **The input clock is defined twice (still open).** `constraints/nexys4ddr.xdc` creates `sys_clk_pin` on `clk` with `-add`, and the Clocking Wizard's own constraints create a second clock on the same pin. Vivado therefore analyses every path twice (`clk_out1_clk_wiz_0` and `clk_out1_clk_wiz_0_1`, with the same result), also between the two copies, and reports 153 flip-flops "with multiple clocks". It does not change the result; dropping the `create_clock` line from the board XDC, which the Clocking Wizard already covers, would leave one clock.
 
 ## Not done yet
 
