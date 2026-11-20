@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -----------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2022.2 (win64) Build 3671981 Fri Oct 14 05:00:03 MDT 2022
-| Date         : Fri Nov 20 13:34:26 2026
+| Date         : Fri Nov 20 14:26:59 2026
 | Host         : IK-310-16 running 64-bit major release  (build 9200)
 | Command      : report_utilization -file neuron_top_utilization_placed.rpt -pb neuron_top_utilization_placed.pb
 | Design       : neuron_top
