@@ -17,6 +17,7 @@ The design also shows a **timing side channel**. The course's multiplier takes l
 - [x] Verified in simulation: 4 self-checking testbenches, all pass, one of them driven by test-vector files
 - [x] Variants compared after synthesis: signed weights, hardware multipliers (DSP48E1), block RAM ([resource table](#variants-and-what-they-cost))
 - [x] Tested on the Nexys 4 DDR board (October 2026): every switch group, weight sets 0, 1 and 3 (including the maximum, y = 900), and stepping through all 8 sets with wrap-around
+- [x] Implemented in Vivado 2022.2 (November 2026): timing met at 50 MHz with 14.1 ns of slack (the slowest path takes 5.9 ns, about 169 MHz); 100 LUTs, 153 flip-flops, no DSP blocks or block RAM ([implementation results](results/implementation.md))
 
 ![Block diagram](docs/block_diagram.svg)
 
@@ -149,7 +150,22 @@ What the table shows:
 - The parallel neuron is 25 times faster in clocks and uses fewer LUTs, but it spends 4 of the device's 240 DSP blocks. The sequential neuron needs none.
 - A small ROM stays in LUTs; at 1024 words the synchronous version moves into one block RAM and uses no LUTs at all. The asynchronous version could never do that.
 
-These are resource counts only. The maximum clock frequency and a timing simulation after place and route need Vivado; they are not measured yet.
+These are synthesis estimates. The board design has also been placed and routed in Vivado (next section); the variants have not.
+
+## Implementation in Vivado
+
+Vivado 2022.2, xc7a100tcsg324-1, 20 November 2026 ([details and full reports](results/implementation.md)):
+
+| | Board design (`neuron_top`) |
+| --- | --- |
+| Clock | 50 MHz from the Clocking Wizard |
+| Worst setup slack | +14.094 ns: all timing constraints met |
+| Worst hold slack | +0.048 ns |
+| Slowest path | 5.9 ns, tick counter → start of a run → clear of the accumulator, 78% routing |
+| Estimated maximum clock | about 169 MHz |
+| Resources | 100 LUTs, 153 flip-flops, 12 CARRY4, 0 DSP48E1, 0 block RAM, 1 MMCM |
+
+The slowest path is not in the multiplier or the adder but in the control signal that starts each run and fans out to 36 flip-flops. Vivado's flip-flop count matches the Yosys estimate (153 against 150), and there are no latches.
 
 ## Build and run
 
@@ -178,7 +194,7 @@ src/           Verilog design, 11 modules, and weights.mem
 src/variants/  signed neuron, parallel neuron, synchronous ROM (not on the board)
 sim/           testbenches, test-vector files and run_sim.sh
 tools/         gen_vectors.py (test vectors), resources.py (synthesis table)
-results/       resources.md
+results/       resources.md (Yosys), implementation.md and vivado/ (Vivado reports)
 constraints/   nexys4ddr.xdc (Vivado)
 docs/          project guide, block diagram, ASM chart, waveform
 ```
@@ -187,7 +203,7 @@ docs/          project guide, block diagram, ASM chart, waveform
 
 - Put the signed neuron on the board (negative results on the display).
 - A second neuron layer: two hidden neurons feeding one output neuron.
-- Measure the maximum clock frequency of each variant in Vivado and run a post-implementation timing simulation.
+- Implement the variants in Vivado too, compare their maximum clock frequency with the board design, and run a timing simulation after place and route.
 - Load the weights over UART from a PC instead of rebuilding.
 
 ---
