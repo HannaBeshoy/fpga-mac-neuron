@@ -185,7 +185,9 @@ To simulate in XSim:
 - For `tb_top.v`, add `SIMULATION` under **Settings → Simulation → Verilog options → Defines**, so the clock passes straight through.
 - `tb_mult.v` and `tb_neuron.v` need no define.
 
-**Icarus Verilog** (free, any OS): `cd sim && ./run_sim.sh` runs all three testbenches.
+**Icarus Verilog** (free, any OS): `cd sim && ./run_sim.sh` runs all four testbenches.
+
+**Vivado, variants and timing simulation** (Tcl console, no project open): `cd` to the repository folder, then `source scripts/variants_ooc.tcl`. It places and routes each variant and the board neuron at clock periods from 20 ns down to 3 ns, writes the reports and `summary.csv` to `results/vivado/variants/`, and runs `tb_top.v` on the post-route netlist with its delays (`results/vivado/timesim/`). The options are at the top of the script.
 
 ## Repository layout
 
@@ -194,6 +196,7 @@ src/           Verilog design, 11 modules, and weights.mem
 src/variants/  signed neuron, parallel neuron, synchronous ROM (not on the board)
 sim/           testbenches, test-vector files and run_sim.sh
 tools/         gen_vectors.py (test vectors), resources.py (synthesis table)
+scripts/       variants_ooc.tcl (Vivado: variants placed and routed, Fmax sweep, timing simulation)
 results/       resources.md (Yosys), implementation.md and vivado/ (Vivado reports)
 constraints/   nexys4ddr.xdc (Vivado)
 docs/          project guide, block diagram, ASM chart, waveform

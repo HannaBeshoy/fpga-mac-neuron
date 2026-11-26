@@ -7,6 +7,12 @@
 // presses buttons (with bounce), and reads the results the way you would on
 // the board: from the LEDs and by decoding the 7-segment display while it
 // scans. Expected values come from its own copy of weights.mem.
+//
+// With the define TIMESIM it runs on the post-route netlist instead
+// (scripts/variants_ooc.tcl): the netlist is built with the same small tick
+// periods, the real Clocking Wizard turns this 100 MHz clock into 50 MHz, so
+// every wait takes twice as many clocks (S = 2), and the display is read only
+// once its outputs have settled after the routing delays.
 // ============================================================================
 module tb_top;
     reg         clk = 1'b0, cpu_resetn = 1'b0, btnu = 1'b0, btnd = 1'b0;
@@ -16,9 +22,17 @@ module tb_top;
     wire [7:0]  an;
     wire        dp;
 
+`ifdef TIMESIM
+    localparam S = 2;                         // system clock = this clock / 2
+    neuron_top DUT (                          // parameters fixed in the netlist
+        .clk(clk), .cpu_resetn(cpu_resetn), .btnu(btnu), .btnd(btnd),
+        .sw(sw), .led(led), .a_to_g(a_to_g), .an(an), .dp(dp));
+`else
+    localparam S = 1;                         // clock passed straight through
     neuron_top #(.SCAN_BIT(0), .SAMPLE_BITS(6), .MEMFILE("weights.mem")) DUT (
         .clk(clk), .cpu_resetn(cpu_resetn), .btnu(btnu), .btnd(btnd),
         .sw(sw), .led(led), .a_to_g(a_to_g), .an(an), .dp(dp));
+`endif
 
     always #5 clk = ~clk;
 
@@ -52,18 +66,39 @@ module tb_top;
         begin
             for (b = 0; b < 6; b = b + 1) begin
                 if (up) btnu = ~btnu; else btnd = ~btnd;
-                repeat (3) @(posedge clk);
+                repeat (3*S) @(posedge clk);
             end
             if (up) btnu = 1'b1; else btnd = 1'b1;
-            repeat (400) @(posedge clk);
+            repeat (400*S) @(posedge clk);
             if (up) btnu = 1'b0; else btnd = 1'b0;
-            repeat (400) @(posedge clk);
+            repeat (400*S) @(posedge clk);
         end
     endtask
 
     // read all 8 digits and both decimal points while the display scans
     task read_display(output [31:0] digits, output [7:0] points);
         integer n, d;
+`ifdef TIMESIM
+        integer quiet;
+        reg [15:0] seen;
+        begin
+            // a digit counts once the anodes, segments and point have held
+            // still for 6 ns; 400 ns = 20 digit times, every digit at least twice
+            quiet = 0;
+            seen  = {an, a_to_g, dp};
+            for (n = 0; n < 400; n = n + 1) begin
+                #1;
+                if ({an, a_to_g, dp} === seen) quiet = quiet + 1;
+                else begin quiet = 0; seen = {an, a_to_g, dp}; end
+                if (quiet >= 6)
+                    for (d = 0; d < 8; d = d + 1)
+                        if (an == ~(8'd1 << d)) begin
+                            digits[4*d +: 4] = seg2hex(a_to_g);
+                            points[d] = ~dp;
+                        end
+            end
+        end
+`else
         begin
             for (n = 0; n < 16; n = n + 1) begin
                 @(negedge clk);
@@ -74,6 +109,7 @@ module tb_top;
                     end
             end
         end
+`endif
     endtask
 
     // compare the board with the model for the current switches and set
@@ -83,7 +119,7 @@ module tb_top;
         reg [31:0] shown, want_digits;
         reg [7:0]  pts;
         begin
-            repeat (300) @(posedge clk);                    // a few runs
+            repeat (300*S) @(posedge clk);                  // a few runs
             y  = dot(model[set][15:0], sw);
             th = model[set][25:16];
             f  = (y >= th);
@@ -113,12 +149,16 @@ module tb_top;
 
     initial begin
         $readmemb("weights.mem", model);
+`ifndef TIMESIM
         $dumpfile("tb_top.vcd");
         $dumpvars(0, tb_top);
+`endif
         sw = 16'hF00F;                                     // x3 = 15, x0 = 15
         repeat (20) @(posedge clk);
         cpu_resetn = 1'b1;
-        repeat (20) @(posedge clk);
+        for (k = 0; k < 200000 && led[15] !== 1'b1; k = k + 1)
+            @(posedge clk);                                // wait for the MMCM to lock
+        repeat (20*S) @(posedge clk);
         checks = checks + 1;
         if (!led[15]) begin errors = errors + 1; $display("ERROR: clock not locked"); end
 

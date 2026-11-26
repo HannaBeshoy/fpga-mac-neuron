@@ -52,3 +52,6 @@ usage_statistics_webtalk.html
 *.sim/
 *.jou
 *.log
+
+# Vivado builds made by scripts/variants_ooc.tcl
+build/

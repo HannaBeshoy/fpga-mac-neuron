@@ -50,3 +50,5 @@ Vivado's flip-flop count agrees with the open-source synthesis (153 against 150)
 
 - Implementation of the variants in `src/variants/` (signed neuron, parallel neuron with DSP48E1 blocks, synchronous ROM).
 - A timing simulation after place and route.
+
+`scripts/variants_ooc.tcl` does both: it places and routes each variant and the board neuron out of context over a sweep of clock periods (reports and `summary.csv` in `vivado/variants/`), then runs `tb_top.v` on the post-route netlist of the board design with its SDF delays (`vivado/timesim/`). The results will be added here once it has run.
